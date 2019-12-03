@@ -8,37 +8,33 @@ import sys
 
 from os.path import join as pj
 
-# from pycocotools.coco import COCO
-#
-# def extract_subset_coco(annFile, size=100):
-# 	coco = COCO(annFile)
-# 	imgIds = coco.getImgIds()
-# 	random.shuffle(imgIds)
-# 	imgs = coco.loadImgs(imgIds[:100])
-# 	return [img['file_name'] for img in imgs]
+import argparse
 
-scriptpath = "/media/yingges/Data/201910/Deploy/DCN_GPU_cu100/DCN"
+parser = argparse.ArgumentParser('')
+parser.add_argument('--img_folder_path', type=str)
+parser.add_argument('--valid_json_file', type=str)
+parser.add_argument('--output_path', type=str)
+parser.add_argument('--lib_path', help='Example: /media/yingges/Data/201910/Deploy/DCN_GPU_cu100/DCN', type=str)
+parser.add_argument('--save_img')
+parser.add_argument('--display_img', help='Also set this to true if want to save output images.')
+args = parser.parse_args()
 
-# Add the directory containing your module to the Python path (wants absolute paths)
-sys.path.append(os.path.abspath(scriptpath))
+# args.img_folder_path = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/images'
+# args.valid_json_file = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/valid.json'
+# args.output_path = output_path = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/augmented_output.json'
+# args.lib_path = "/media/yingges/Data/201910/Deploy/DCN_GPU_cu100/DCN"
 
-# batch_data_source = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/images'
-batch_data_source = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/images'
-test_img_path = [pj(batch_data_source, file) for file in os.listdir(batch_data_source) if file.endswith('.jpg')]
-# gt_file = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/cocoformat_valid_out.json'
-gt_file = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/valid.json'
-gt_json = json.load(open(gt_file))
+img_info = None
+if arg.valid_json_file is not None:
+	gt_json = json.load(open(gt_file))
+	img_info = gt_json['images']
 
-# model_path = '/media/yingges/Data/201910/Deploy/Deformable-ConvNets-CPU/DCN/model/rfcn_dcn_voc'
-model_path = 'DCN/model/rfcn_dcn_voc'
-
-# from rfcn import inference
+test_img_path = [pj(args.img_folder_path, file) for file in os.listdir(args.img_folder_path) if file.endswith('.jpg')]
+sys.path.append(os.path.abspath(args.lib_path))
 import DCN.fpn.inference as inference
 
-# extract_subset('/media/yingges/Data/201910/FT/FTData/ft_od1_merged',
-# 			   '/media/yingges/Data/201910/FT/FTData/ft_od1_merged/sample1', 1)
-
 inference.dataset_img_infer(test_img_path, model_path,
-							'/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/epoch21_output.json',
-							gt_json['images'], 'fpn', True, False,
+							output_path,
+							img_info, 'fpn', True, 
+							args.display_img, args.save_img,
 							32)

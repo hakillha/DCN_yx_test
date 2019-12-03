@@ -88,10 +88,12 @@ def dataset_img_infer(image_names,
                       model_type,
                       cuda_provided,
                       display,
+                      save_img,
                       batch=64, 
                       viz_json_file=None, 
                       classes=None,
-                      thresh=1e-3,
+                      # thresh=1e-3,
+                      thresh=0.5,
                       classes_map=None,
                       ):
     """
@@ -110,8 +112,9 @@ def dataset_img_infer(image_names,
     # model_path
     # json_file
     image_id_map = {}
-    for info in image_info_list:
-        image_id_map[info['file_name']] = info['id']
+    if image_info_list is not None:
+        for info in image_info_list:
+            image_id_map[info['file_name']] = info['id']
 
     if classes == None:
         classes = PREDEFINED_CLASSES
@@ -131,16 +134,24 @@ def dataset_img_infer(image_names,
             viz_json_dict['categories'].append(cat_entry)
         viz_json_dict['categories'].sort(key=lambda val: val['id'])
 
-    image_names =  [im_name for im_name in image_names if os.path.basename(im_name) in image_id_map.keys()]
+    # skip the image files that are not in the json ann file
+    if image_info_list is not None:
+        image_names =  [im_name for im_name in image_names if os.path.basename(im_name) in image_id_map.keys()]
     steps = int(len(image_names) / batch) + 1
     for step in range(steps):
         data = image_names[step * batch:] if step == steps - 1 else image_names[step * batch:(step + 1) * batch]
-        res_list = batch_img_infer(data, model_path, model_type, classes=classes, thresh=thresh, cuda_provided=cuda_provided, display=display)
+        res_list = batch_img_infer(data,
+                                   model_path, 
+                                   model_type, 
+                                   classes=classes, 
+                                   thresh=thresh, 
+                                   cuda_provided=cuda_provided, 
+                                   display=display,
+                                   save_img=save_img,
+                                   img_save_path=json_file)
         for res, im_name in zip(res_list, data):
-            # skip the image files that are not in the json ann file
-            # if not os.path.basename(im_name) in image_id_map.keys():
-            #     continue
-            res2jsonlist(res, out_json_list, image_id_map)
+            if image_info_list is not None:
+                res2jsonlist(res, out_json_list, image_id_map)
 
             if viz_json_file is not None:
                 ids = res2jsondict(res, viz_json_dict, im_name, img_id, anno_id)
@@ -167,7 +178,10 @@ def batch_img_infer(image_names,
                     thresh=1e-3, 
                     classes_map=None,
                     display=False,
-                    cuda_provided=False):
+                    cuda_provided=False,
+                    img_out_folder=None,
+                    save_img=False,
+                    img_save_path=None):
     """
 
     Args:
@@ -296,6 +310,7 @@ def batch_img_infer(image_names,
             im = cv2.imread(im_name)
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
             show_boxes(im, all_boxes[1:], classes, 1)
+            plt.savefig(pj(img_save_path, os.path.basename(im_name)))
 
         res = {'file_name': os.path.basename(im_name), 'bbox': [], 'score': [], 'cat_name': [], 'cat_id': []}
         for cls_idx, cls_name in enumerate(classes): # order of the iteration

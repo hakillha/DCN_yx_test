@@ -27,6 +27,5 @@ def show_boxes(im, dets, classes, scale = 1.0):
                 plt.gca().text(bbox[0], bbox[1],
                                '{:s} {:.3f}'.format(cls_name, score),
                                bbox=dict(facecolor=color, alpha=0.5), fontsize=9, color='white')
-    plt.show()
     return im
 
