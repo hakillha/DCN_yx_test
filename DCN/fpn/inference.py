@@ -178,7 +178,7 @@ def batch_img_infer(image_names,
                     thresh=1e-3, 
                     classes_map=None,
                     display=False,
-                    cuda_provided=False,
+                    cuda_provided=True,
                     img_out_folder=None,
                     save_img=False,
                     img_save_path=None):
@@ -204,6 +204,8 @@ def batch_img_infer(image_names,
              ...]
 
     """
+    if type(image_names) is not list:
+        raise Exception('Please provide image input as a list!')
     tic()         
     # get symbol
     # pprint.pprint(config)
@@ -211,6 +213,8 @@ def batch_img_infer(image_names,
         config.symbol = 'resnet_v1_101_rfcn_dcn'
     elif model_type == 'fpn':
         config.symbol = 'resnet_v1_101_fpn_dcn_rcnn'
+    else:
+        raise Exception('Incorrect model type specification!')
     sym_instance = eval(config.symbol + '.' + config.symbol)()
     sym = sym_instance.get_symbol(config, is_train=False)
 
