@@ -19,14 +19,15 @@ parser.add_argument('--save_img')
 parser.add_argument('--display_img', help='Also set this to true if want to save output images.')
 args = parser.parse_args()
 
-args.img_folder_path = '/home/yingges/data/ft_det/cleanedup_ignoresmall_valid/images'
-# args.valid_json_file = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/valid.json'
-args.output_path = '/home/yingges/data/ft_det/cleanedup_ignoresmall_valid/img_output'
-args.lib_path = "/home/yingges/experiment/DCN/DCN_yx_test"
+args.img_folder_path = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/og_files/images'
+args.valid_json_file = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/og_files/valid.json'
+args.output_path = '/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup/ignore_toosmall/11_30/og_files/output.json'
+# args.lib_path = "/home/yingges/experiment/DCN/DCN_yx_test"
+args.lib_path = '.'
 
 img_info = None
 if args.valid_json_file is not None:
-	gt_json = json.load(open(gt_file))
+	gt_json = json.load(open(args.valid_json_file))
 	img_info = gt_json['images']
 
 test_img_path = [pj(args.img_folder_path, file) for file in os.listdir(args.img_folder_path) if file.endswith('.jpg')]
