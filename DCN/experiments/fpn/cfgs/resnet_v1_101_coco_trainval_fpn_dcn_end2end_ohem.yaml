@@ -7,8 +7,8 @@ CLASS_AGNOSTIC: false
 SCALES:
 - 800
 - 1280
-# TEST_SCALES: [[800, 1280]] # single scale testing
-TEST_SCALES: [[480, 800], [576, 900], [688, 1100], [800, 1200], [1200, 1600], [1400, 2000]] # multi-scale testing
+TEST_SCALES: [[800, 1280]] # single scale testing
+# TEST_SCALES: [[480, 800], [576, 900], [688, 1100], [800, 1200], [1200, 1600], [1400, 2000]] # multi-scale testing
 default:
   frequent: 100
   kvstore: device
@@ -53,7 +53,7 @@ network:
   - 8
   NUM_ANCHORS: 3
 dataset:
-  NUM_CLASSES: 24
+  NUM_CLASSES: 11
   dataset: coco
   dataset_path: "/media/yingges/Data/201910/FT/FTData/ft_det_cleanedup"
   image_set: train2014
@@ -65,15 +65,15 @@ TRAIN:
   lr: 0.00125
   warmup_lr: 0.001
   warmup_step: 250
-  warmup: false
+  warmup: true
   # lr: 0.000001
   lr_step: '4,6'
   wd: 0.0001
-  begin_epoch: 8
+  begin_epoch: 0
   end_epoch: 70
   model_prefix: 'fpn_coco'
   # whether resume training
-  RESUME: true
+  RESUME: false
   # whether flip image
   FLIP: true
   # whether shuffle image

@@ -112,7 +112,7 @@ class coco(IMDB):
     def _get_ann_file(self):
         """ self.data_path / annotations / instances_train2014.json """
         prefix = 'instances' if 'test' not in self.image_set else 'image_info'
-        return os.path.join(self.data_path, 'cocoformat_train_out.json')
+        return os.path.join(self.data_path, 'updated_generic/train.json')
         # return os.path.join(self.data_path, 'cocoformat_valid_out.json')
 
     def _load_image_set_index(self):
