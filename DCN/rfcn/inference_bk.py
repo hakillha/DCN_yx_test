@@ -16,7 +16,6 @@ import mxnet as mx
 
 from os.path import join as pj
 
-cur_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, cur_path)
 import _init_paths
 from utils.image import resize, transform
@@ -27,17 +26,18 @@ from utils.show_boxes import show_boxes
 from utils.tictoc import tic, toc
 from nms.nms import py_nms_wrapper, cpu_nms_wrapper, gpu_nms_wrapper
 from config.config import config, update_config
-update_config(cur_path + '/../experiments/rfcn/cfgs/resnet_v1_101_voc0712_rfcn_dcn_end2end_ohem.yaml')
+# update_config(cur_path + '/../experiments/rfcn/cfgs/resnet_v1_101_voc0712_rfcn_dcn_end2end_ohem.yaml')
+update_config(cur_path + '/../experiments/fpn/cfgs/resnet_v1_101_coco_trainval_fpn_dcn_end2end_ohem.yaml')
 os.environ['PYTHONUNBUFFERED'] = '1'
 os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
 os.environ['MXNET_ENABLE_GPU_P2P'] = '0'
 
-PREDEFINED_CLASSES = ['i','p', 'wo', 'rn', 'lo', 'tl',  'ro']
-# PREDEFINED_CLASSES = ['io', 'wo', 'ors', 'p10', 'p11', 
-#                       'p26', 'p20', 'p23', 'p19', 'pne',
-#                       'rn', 'ps', 'p5', 'lo', 'tl',
-#                       'pg', 'sc1','sc0', 'ro', 'pn',
-#                       'po', 'pl', 'pm']
+# PREDEFINED_CLASSES = ['i','p', 'wo', 'rn', 'lo', 'tl',  'ro']
+PREDEFINED_CLASSES = ['io', 'wo', 'ors', 'p10', 'p11', 
+                      'p26', 'p20', 'p23', 'p19', 'pne',
+                      'rn', 'ps', 'p5', 'lo', 'tl',
+                      'pg', 'sc1','sc0', 'ro', 'pn',
+                      'po', 'pl', 'pm']
 
 def res2jsondict(res, out_json_dict, im_name, img_id, anno_id):
     for bbox, score, cat_name, cat_id in zip(res['bbox'], res['score'], res['cat_name'], res['cat_id']):
@@ -84,10 +84,6 @@ def dataset_img_infer(image_names,
                       model_path, 
                       json_file, 
                       image_info_list,
-                      model_type,
-                      cuda_provided,
-                      display,
-                      save_img,
                       batch=64, 
                       viz_json_file=None, 
                       classes=None,
@@ -109,9 +105,8 @@ def dataset_img_infer(image_names,
     # model_path
     # json_file
     image_id_map = {}
-    if image_info_list is not None:
-        for info in image_info_list:
-            image_id_map[info['file_name']] = info['id']
+    for info in image_info_list:
+        image_id_map[info['file_name']] = info['id']
 
     if classes == None:
         classes = PREDEFINED_CLASSES
@@ -131,24 +126,15 @@ def dataset_img_infer(image_names,
             viz_json_dict['categories'].append(cat_entry)
         viz_json_dict['categories'].sort(key=lambda val: val['id'])
 
-    # skip the image files that are not in the json ann file
-    if image_info_list is not None:
-        image_names =  [im_name for im_name in image_names if os.path.basename(im_name) in image_id_map.keys()]
     steps = int(len(image_names) / batch) + 1
     for step in range(steps):
         data = image_names[step * batch:] if step == steps - 1 else image_names[step * batch:(step + 1) * batch]
-        res_list = batch_img_infer(data,
-                                   model_path, 
-                                   model_type, 
-                                   classes=classes, 
-                                   thresh=thresh, 
-                                   cuda_provided=cuda_provided, 
-                                   display=display,
-                                   save_img=save_img,
-                                   img_save_path=json_file)
+        res_list = batch_img_infer(data, model_path, classes=classes, thresh=thresh)
         for res, im_name in zip(res_list, data):
-            if image_info_list is not None:
-                res2jsonlist(res, out_json_list, image_id_map)
+            # skip the image files that are not in the json ann file
+            if not os.path.basename(im_name) in image_id_map.keys():
+                continue
+            res2jsonlist(res, out_json_list, image_id_map)
 
             if viz_json_file is not None:
                 ids = res2jsondict(res, viz_json_dict, im_name, img_id, anno_id)
@@ -168,17 +154,12 @@ def dataset_img_infer(image_names,
 
 def batch_img_infer(image_names,
                     model_path,
-                    model_type,
                     output_coco_json=False, 
                     json_file=None, 
                     classes=None, 
                     thresh=1e-3, 
                     classes_map=None,
-                    display=False,
-                    cuda_provided=True,
-                    img_out_folder=None,
-                    save_img=False,
-                    img_save_path=None):
+                    display=False):
     """
 
     Args:
@@ -201,17 +182,10 @@ def batch_img_infer(image_names,
              ...]
 
     """
-    if type(image_names) is not list:
-        raise Exception('Please provide image input as a list!')
     tic()         
     # get symbol
     # pprint.pprint(config)
-    if model_type == 'rfcn':
-        config.symbol = 'resnet_v1_101_rfcn_dcn'
-    elif model_type == 'fpn':
-        config.symbol = 'resnet_v1_101_fpn_dcn_rcnn'
-    else:
-        raise Exception('Incorrect model type specification!')
+    config.symbol = 'resnet_v1_101_rfcn_dcn'
     sym_instance = eval(config.symbol + '.' + config.symbol)()
     sym = sym_instance.get_symbol(config, is_train=False)
 
@@ -245,16 +219,14 @@ def batch_img_infer(image_names,
     provide_label = [None for i in xrange(len(data))]
 
     arg_params, aux_params = load_param(model_path, 0, process=True)
-    if cuda_provided:
-        predictor = Predictor(sym, data_names, label_names,
-                              context=[mx.gpu(0)], max_data_shapes=max_data_shape,
-                              provide_data=provide_data, provide_label=provide_label,
-                              arg_params=arg_params, aux_params=aux_params)
-    else:
-        predictor = Predictor(sym, data_names, label_names,
-                              context=[mx.cpu()], max_data_shapes=max_data_shape,
-                              provide_data=provide_data, provide_label=provide_label,
-                              arg_params=arg_params, aux_params=aux_params)
+    predictor = Predictor(sym, data_names, label_names,
+                          context=[mx.cpu()], max_data_shapes=max_data_shape,
+                          provide_data=provide_data, provide_label=provide_label,
+                          arg_params=arg_params, aux_params=aux_params)
+    # predictor = Predictor(sym, data_names, label_names,
+    #                       context=[mx.gpu(0)], max_data_shapes=max_data_shape,
+    #                       provide_data=provide_data, provide_label=provide_label,
+    #                       arg_params=arg_params, aux_params=aux_params)
     # nms = gpu_nms_wrapper(config.TEST.NMS, 0)
     nms = py_nms_wrapper(config.TEST.NMS)
 
@@ -311,7 +283,6 @@ def batch_img_infer(image_names,
             im = cv2.imread(im_name)
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
             show_boxes(im, all_boxes[1:], classes, 1)
-            plt.savefig(pj(img_save_path, os.path.basename(im_name)))
 
         res = {'file_name': os.path.basename(im_name), 'bbox': [], 'score': [], 'cat_name': [], 'cat_id': []}
         for cls_idx, cls_name in enumerate(classes): # order of the iteration

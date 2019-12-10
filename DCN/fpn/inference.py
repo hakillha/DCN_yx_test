@@ -27,7 +27,6 @@ from utils.show_boxes import show_boxes
 from utils.tictoc import tic, toc
 from nms.nms import py_nms_wrapper, cpu_nms_wrapper, gpu_nms_wrapper
 from config.config import config, update_config
-# update_config(cur_path + '/../experiments/rfcn/cfgs/resnet_v1_101_voc0712_rfcn_dcn_end2end_ohem.yaml')
 update_config(cur_path + '/../experiments/fpn/cfgs/resnet_v1_101_coco_trainval_fpn_dcn_end2end_ohem.yaml')
 os.environ['PYTHONUNBUFFERED'] = '1'
 os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
@@ -92,8 +91,8 @@ def dataset_img_infer(image_names,
                       batch=64, 
                       viz_json_file=None, 
                       classes=None,
-                      # thresh=1e-3,
-                      thresh=0.5,
+                      thresh=1e-3,
+                      # thresh=0.5,
                       classes_map=None,
                       ):
     """
