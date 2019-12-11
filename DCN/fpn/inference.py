@@ -33,7 +33,7 @@ os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
 os.environ['MXNET_ENABLE_GPU_P2P'] = '0'
 
 # PREDEFINED_CLASSES = ['i','p', 'wo', 'rn', 'lo', 'tl',  'ro']
-PRE_DEFINE_CATEGORIES_GENERIC_UPDATED_TEST = ['i' 'p', 'wo', 'rn', 'lo', 
+PRE_DEFINE_CATEGORIES_GENERIC_UPDATED_TEST = ['i', 'p', 'wo', 'rn', 'lo', 
                                               'tl', 'ro', 'sc0', 'sc1']
 PREDEFINED_CLASSES = ['io', 'wo', 'ors', 'p10', 'p11', 
                       'p26', 'p20', 'p23', 'p19', 'pne',
@@ -183,7 +183,8 @@ def batch_img_infer(image_names,
                     cuda_provided=True,
                     img_out_folder=None,
                     save_img=False,
-                    img_save_path=None):
+                    img_save_path=None,
+                    fg_cls=False):
     """
 
     Args:
