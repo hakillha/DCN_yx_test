@@ -33,6 +33,8 @@ os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
 os.environ['MXNET_ENABLE_GPU_P2P'] = '0'
 
 # PREDEFINED_CLASSES = ['i','p', 'wo', 'rn', 'lo', 'tl',  'ro']
+PRE_DEFINE_CATEGORIES_GENERIC_UPDATED_TEST = ['i' 'p', 'wo', 'rn', 'lo', 
+                                              'tl', 'ro', 'sc0', 'sc1']
 PREDEFINED_CLASSES = ['io', 'wo', 'ors', 'p10', 'p11', 
                       'p26', 'p20', 'p23', 'p19', 'pne',
                       'rn', 'ps', 'p5', 'lo', 'tl',
@@ -94,6 +96,7 @@ def dataset_img_infer(image_names,
                       thresh=1e-3,
                       # thresh=0.5,
                       classes_map=None,
+                      fg_cls=False
                       ):
     """
     Args:
@@ -116,7 +119,7 @@ def dataset_img_infer(image_names,
             image_id_map[info['file_name']] = info['id']
 
     if classes == None:
-        classes = PREDEFINED_CLASSES
+        classes = PREDEFINED_CLASSES if fg_cls else PRE_DEFINE_CATEGORIES_GENERIC_UPDATED_TEST
     if classes_map == None:
         classes_map = {}
         for idx, cls_ in enumerate(classes):
@@ -219,7 +222,7 @@ def batch_img_infer(image_names,
 
     # set up class names
     if classes == None:
-        classes = PREDEFINED_CLASSES
+        classes = PREDEFINED_CLASSES if fg_cls else PRE_DEFINE_CATEGORIES_GENERIC_UPDATED_TEST
     if classes_map == None:
         classes_map = {}
         for idx, cls_ in enumerate(classes):
